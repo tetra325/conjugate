@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conjugate</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Figtree', 'sans-serif'],
+                        display: ['Figtree', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#faf5ff',
+                            100: '#f3e8ff',
+                            200: '#e9d5ff',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                            700: '#7e22ce',
+                            800: '#6b21a8',
+                            900: '#581c87',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            font-family: 'Figtree', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+            min-height: 100vh;
+        }
+        
+        .pop-in {
+            animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        @keyframes popIn {
+            0% { transform: scale(0.94); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .shake {
+            animation: shake 0.35s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans antialiased selection:bg-purple-500 selection:text-white">
+
+    <header class="border-b border-purple-100 bg-white/90 backdrop-blur-md sticky top-0 z-40 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-tr from-purple-600 to-indigo-600 p-2.5 rounded-xl text-white font-black text-xl shadow-md shadow-purple-500/20">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-lg md:text-xl tracking-tight text-slate-900 flex items-center gap-2">
+                        ¡Conjugate!
+                        <button onclick="openSettingsModal()" id="header-tense-badge" class="text-[9px] uppercase font-bold tracking-widest bg-purple-100 hover:bg-purple-200 text-purple-700 border border-purple-200 px-2 py-0.5 leading-none rounded-full transition flex items-center gap-1">
+                            <span>Present Tense</span> <i class="fa-solid fa-chevron-down text-[8px]"></i>
+                        </button>
+                    </h1>
+                    <p class="text-xs text-slate-500 hidden sm:block">Rapid Spanish verb conjugation drill for practice</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3 text-sm">
+                <!-- Streak Badge -->
+                <div class="flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200" title="Current streak">
+                    <i class="fa-solid fa-fire text-amber-500 text-base animate-pulse"></i>
+                    <span id="header-streak" class="font-black text-slate-800 text-base">0</span>
+                    <span class="text-xs text-slate-500 hidden md:inline">Streak</span>
+                </div>
+
+                <!-- Best Streak -->
+                <div class="flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200" title="Best streak">
+                    <i class="fa-solid fa-trophy text-amber-500 text-sm"></i>
+                    <span id="header-best-streak" class="font-black text-slate-800 text-base">0</span>
+                    <span class="text-xs text-slate-500 hidden md:inline">Best</span>
+                </div>
+
+                <!-- Coverage Modal Trigger -->
+                <button onclick="openCoverageModal()" title="View Practice Coverage & Repeat Counts" class="flex items-center gap-1.5 bg-purple-50 hover:bg-purple-100/80 px-3 py-1.5 rounded-xl border border-purple-200 text-purple-800 font-semibold transition">
+                    <i class="fa-solid fa-chart-pie text-purple-600"></i>
+                    <span id="header-coverage-pct" class="font-bold text-slate-900 text-base">0%</span>
+                    <span id="header-completions-badge" class="hidden px-1.5 py-0.5 rounded-md bg-purple-200 text-purple-900 font-bold text-xs border border-purple-300">0x full</span>
+                    <span class="text-xs text-purple-700 hidden lg:inline">Done</span>
+                </button>
+
+                <!-- Settings Toggle Button -->
+                <button onclick="openSettingsModal()" class="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-3 py-1.5 rounded-xl shadow-md shadow-purple-600/20 border border-purple-500 transition">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span class="hidden sm:inline text-xs font-bold">Verbs</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-4xl w-full mx-auto p-4 md:p-6 flex flex-col justify-center items-center">
+        
+        <!-- Practice Mode Switcher Tabs -->
+        <div class="w-full max-w-md bg-white p-1 rounded-2xl border border-purple-100 shadow-sm flex gap-1 mb-6 text-xs font-bold">
+            <button id="mode-btn-spam" onclick="switchMode('spam')" class="flex-1 py-2 rounded-xl transition text-center bg-purple-600 text-white shadow-md">
+                <i class="fa-solid fa-bolt mr-1"></i> Practice
+            </button>
+            <button id="mode-btn-speedrun" onclick="switchMode('speedrun')" class="flex-1 py-2 rounded-xl transition text-center text-slate-600 hover:text-purple-600 hover:bg-purple-50">
+                <i class="fa-solid fa-stopwatch mr-1"></i> 60s Speedrun
+            </button>
+            <button id="mode-btn-cards" onclick="switchMode('cards')" class="flex-1 py-2 rounded-xl transition text-center text-slate-600 hover:text-purple-600 hover:bg-purple-50">
+                <i class="fa-solid fa-clone mr-1"></i> Flashcards
+            </button>
+        </div>
+
+        <!-- Timed Speedrun Timer Banner -->
+        <div id="speedrun-banner" class="w-full max-w-xl bg-gradient-to-r from-purple-500/10 via-amber-500/10 to-purple-500/10 border border-purple-200 rounded-2xl p-3 mb-4 flex items-center justify-between hidden">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-stopwatch text-purple-600 text-xl animate-bounce"></i>
+                <span class="font-bold text-slate-700 text-sm">Time Remaining:</span>
+            </div>
+            <span id="speedrun-timer" class="font-black font-mono text-2xl text-purple-700">60s</span>
+        </div>
+
+        <div id="drill-card" class="w-full max-w-xl bg-white border border-purple-100 rounded-3xl p-6 md:p-8 shadow-xl shadow-purple-900/5 relative flex flex-col items-center">
+            
+            <!-- Category Tag & Audio Button -->
+            <div class="w-full flex items-center justify-between mb-4">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                    <span id="card-tense-tag" class="text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full bg-purple-600 text-white shadow-xs">
+                        PRESENT
+                    </span>
+                    <span id="card-verb-type" class="text-xs font-extrabold uppercase tracking-wider px-3 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+                        Regular -AR
+                    </span>
+                </div>
+                <button onclick="speakCurrentVerb()" class="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-full transition" title="Listen to pronunciation">
+                    <i class="fa-solid fa-volume-high text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Subject Pronoun & Verb Prompt -->
+            <div class="text-center my-2">
+                <div id="card-pronoun" class="text-purple-600 font-black text-2xl md:text-3xl tracking-tight mb-1">
+                    YO
+                </div>
+                <div class="flex items-center justify-center gap-2">
+                    <span id="card-verb-infinitive" class="text-slate-900 font-extrabold text-3xl md:text-5xl">
+                        hablar
+                    </span>
+                    <span id="card-verb-english" class="text-slate-500 font-medium text-base md:text-xl italic">
+                        (to speak)
+                    </span>
+                </div>
+            </div>
+
+            <!-- Interactive Answer Form -->
+            <form id="conjugation-form" onsubmit="handleFormSubmit(event)" class="w-full max-w-md mt-6 space-y-4">
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        id="answer-input" 
+                        autocomplete="off" 
+                        autocorrect="off" 
+                        autocapitalize="none" 
+                        spellcheck="false" 
+                        placeholder="Type conjugated form..." 
+                        class="w-full bg-slate-50 border-2 border-purple-200 focus:border-purple-600 focus:ring-4 focus:ring-purple-500/15 rounded-2xl py-3.5 px-4 text-center font-bold text-xl md:text-2xl text-slate-900 placeholder-slate-400 outline-none transition"
+                    >
+                    
+                    <div class="flex justify-center gap-1.5 mt-3">
+                        <button type="button" onclick="insertAccent('á')" class="px-2.5 py-1 bg-slate-100 hover:bg-purple-100 text-slate-700 hover:text-purple-700 font-bold rounded-lg border border-slate-200 text-xs transition">á</button>
+                        <button type="button" onclick="insertAccent('é')" class="px-2.5 py-1 bg-slate-100 hover:bg-purple-100 text-slate-700 hover:text-purple-700 font-bold rounded-lg border border-slate-200 text-xs transition">é</button>
+                        <button type="button" onclick="insertAccent('í')" class="px-2.5 py-1 bg-slate-100 hover:bg-purple-100 text-slate-700 hover:text-purple-700 font-bold rounded-lg border border-slate-200 text-xs transition">í</button>
+                        <button type="button" onclick="insertAccent('ó')" class="px-2.5 py-1 bg-slate-100 hover:bg-purple-100 text-slate-700 hover:text-purple-700 font-bold rounded-lg border border-slate-200 text-xs transition">ó</button>
+                        <button type="button" onclick="insertAccent('ú')" class="px-2.5 py-1 bg-slate-100 hover:bg-purple-100 text-slate-700 hover:text-purple-700 font-bold rounded-lg border border-slate-200 text-xs transition">ú</button>
+                        <button type="button" onclick="insertAccent('ñ')" class="px-2.5 py-1 bg-slate-100 hover:bg-purple-100 text-slate-700 hover:text-purple-700 font-bold rounded-lg border border-slate-200 text-xs transition">ñ</button>
+                    </div>
+                </div>
+
+                <!-- Submit / Next Button -->
+                <button 
+                    type="submit" 
+                    id="submit-btn" 
+                    class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold py-3.5 px-6 rounded-2xl shadow-lg shadow-purple-600/25 transition transform active:scale-95 text-lg flex items-center justify-center gap-2"
+                >
+                    <span>Check Answer</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </form>
+
+            <!-- Flashcard Control View -->
+            <div id="flashcard-controls" class="w-full max-w-md mt-6 space-y-3 hidden">
+                <div id="flashcard-answer-display" class="bg-purple-50 border border-purple-200 rounded-2xl p-4 text-center hidden">
+                    <span class="text-xs text-purple-600 block font-semibold uppercase tracking-wider mb-1">Correct Answer</span>
+                    <span id="flashcard-answer-text" class="text-2xl font-black text-purple-900">hablo</span>
+                </div>
+                
+                <button id="flashcard-reveal-btn" onclick="revealFlashcardAnswer()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-2xl transition shadow-md shadow-purple-600/20">
+                    Show Answer (Spacebar)
+                </button>
+
+                <div id="flashcard-rating-btns" class="grid grid-cols-2 gap-3 hidden">
+                    <button onclick="nextFlashcard(false)" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold py-3 rounded-2xl transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-xmark"></i> Got it Wrong
+                    </button>
+                    <button onclick="nextFlashcard(true)" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold py-3 rounded-2xl transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-check"></i> Got it Right
+                    </button>
+                </div>
+            </div>
+
+            <!-- Feedback Banner -->
+            <div id="feedback-banner" class="w-full mt-4 p-3 rounded-xl font-bold text-center text-sm hidden"></div>
+        </div>
+
+        <p class="text-xs text-slate-400 mt-4 text-center">
+            <i class="fa-solid fa-keyboard mr-1"></i> Press <span class="bg-white text-slate-700 px-1.5 py-0.5 rounded border border-slate-200 shadow-xs">Enter</span> to submit, <span class="bg-white text-slate-700 px-1.5 py-0.5 rounded border border-slate-200 shadow-xs">Space</span> for next card.
+        </p>
+    </main>
+
+    <div id="modal-settings" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white border border-purple-100 rounded-3xl p-5 md:p-6 max-w-3xl w-full text-left shadow-2xl pop-in flex flex-col max-h-[90vh]">
+            
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+                <div>
+                    <h2 class="text-xl font-extrabold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-purple-600"></i> Practice Settings
+                    </h2>
+                    <p class="text-xs text-slate-500">Customize target tenses, filter, and select active verbs</p>
+                </div>
+                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-700 p-1">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Tense Selection Section -->
+            <div class="py-3 border-b border-slate-100 bg-purple-50/40 -mx-5 md:-mx-6 px-5 md:px-6">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-extrabold text-purple-900 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-clock text-purple-600"></i> Target Tenses:
+                    </span>
+                    <div class="flex gap-1">
+                        <button onclick="applyTensePreset('all')" class="bg-purple-100 hover:bg-purple-200 text-purple-800 text-[11px] font-bold px-2 py-0.5 rounded border border-purple-200 transition">Select All</button>
+                        <button onclick="applyTensePreset('present')" class="bg-white hover:bg-purple-100 text-purple-700 text-[11px] font-bold px-2 py-0.5 rounded border border-purple-200 transition">Present Only</button>
+                        <button onclick="applyTensePreset('past')" class="bg-white hover:bg-purple-100 text-purple-700 text-[11px] font-bold px-2 py-0.5 rounded border border-purple-200 transition">Past Tenses</button>
+                    </div>
+                </div>
+                <div id="tense-checkboxes-container" class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+                    <!-- Dynamically populated tense checkboxes -->
+                </div>
+            </div>
+
+            <!-- Quick Selection Presets -->
+            <div class="py-3 border-b border-slate-100">
+                <span class="text-xs font-bold text-slate-500 block mb-2">Verb Presets:</span>
+                <div class="flex flex-wrap gap-1.5">
+                    <button onclick="applyPreset('all')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-lg border border-slate-200 transition">Select All</button>
+                    <button onclick="applyPreset('top10')" class="bg-purple-100 hover:bg-purple-200 text-purple-800 text-xs font-bold px-2.5 py-1 rounded-lg border border-purple-200 transition">Top 10 Essential</button>
+                    <button onclick="applyPreset('ar')" class="bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-lg border border-blue-200 transition">-AR Verbs</button>
+                    <button onclick="applyPreset('er')" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-lg border border-emerald-200 transition">-ER Verbs</button>
+                    <button onclick="applyPreset('ir')" class="bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-bold px-2.5 py-1 rounded-lg border border-amber-200 transition">-IR Verbs</button>
+                    <button onclick="applyPreset('regulars')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold px-2.5 py-1 rounded-lg border border-indigo-200 transition">Regulars Only</button>
+                    <button onclick="applyPreset('stem')" class="bg-pink-50 hover:bg-pink-100 text-pink-700 text-xs font-bold px-2.5 py-1 rounded-lg border border-pink-200 transition">Stem Changers</button>
+                    <button onclick="applyPreset('none')" class="bg-slate-100 hover:bg-slate-200 text-slate-500 text-xs font-semibold px-2.5 py-1 rounded-lg border border-slate-200 transition">Clear All</button>
+                </div>
+            </div>
+
+            <div class="py-3 border-b border-slate-100 bg-slate-50/50 rounded-xl px-3 my-2 space-y-2">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <!-- Filter by Ending -->
+                    <div>
+                        <label class="text-[11px] font-bold text-slate-500 block mb-1">Filter Ending:</label>
+                        <select id="filter-ending-select" onchange="renderVerbGrid()" class="w-full bg-white border border-slate-200 text-xs rounded-lg p-1.5 font-semibold text-slate-700 focus:outline-none focus:border-purple-500">
+                            <option value="all">All Endings (-AR, -ER, -IR)</option>
+                            <option value="-AR">-AR Endings Only</option>
+                            <option value="-ER">-ER Endings Only</option>
+                            <option value="-IR">-IR Endings Only</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter by Type -->
+                    <div>
+                        <label class="text-[11px] font-bold text-slate-500 block mb-1">Filter Type:</label>
+                        <select id="filter-type-select" onchange="renderVerbGrid()" class="w-full bg-white border border-slate-200 text-xs rounded-lg p-1.5 font-semibold text-slate-700 focus:outline-none focus:border-purple-500">
+                            <option value="all">All Types (Regular, Irregular, Stem)</option>
+                            <option value="regular">Regular Verbs Only</option>
+                            <option value="irregular">Irregular Verbs Only</option>
+                            <option value="stem">Stem-Changers Only</option>
+                        </select>
+                    </div>
+
+                    <!-- Sort Order -->
+                    <div>
+                        <label class="text-[11px] font-bold text-slate-500 block mb-1">Sort By:</label>
+                        <select id="filter-sort-select" onchange="renderVerbGrid()" class="w-full bg-white border border-slate-200 text-xs rounded-lg p-1.5 font-semibold text-slate-700 focus:outline-none focus:border-purple-500">
+                            <option value="alpha">Alphabetical (A-Z)</option>
+                            <option value="ending">By Ending (-AR, -ER, -IR)</option>
+                            <option value="type">By Type (Regular / Irregular)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Text Search Filter -->
+                <div class="relative pt-1">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-slate-400 text-xs"></i>
+                    <input 
+                        type="text" 
+                        id="verb-search-input" 
+                        oninput="renderVerbGrid()" 
+                        placeholder="Search verbs (e.g. hablar, to speak, irregular)..." 
+                        class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-purple-500"
+                    >
+                </div>
+            </div>
+
+            <!-- Scrollable Verb Checkboxes Grid -->
+            <div id="verbs-checkbox-grid" class="flex-1 overflow-y-auto custom-scrollbar my-2 pr-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+                <!-- Dynamically populated verb cards -->
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="pt-3 border-t border-slate-100 flex justify-between items-center">
+                <span id="selected-verbs-count" class="text-xs font-bold text-purple-700">0 verbs selected (0 combinations)</span>
+                <button onclick="closeSettingsModal()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm px-5 py-2 rounded-xl shadow-md shadow-purple-600/20 transition">
+                    Save & Practice
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-coverage" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white border border-purple-100 rounded-3xl p-5 md:p-6 max-w-3xl w-full text-left shadow-2xl pop-in flex flex-col max-h-[90vh]">
+            
+            <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+                <div>
+                    <h2 class="text-xl font-extrabold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-purple-600"></i> Conjugation Coverage & Repeat Tracker
+                    </h2>
+                    <p class="text-xs text-slate-500">Track practice repeat counts for all active combinations</p>
+                </div>
+                <button onclick="closeCoverageModal()" class="text-slate-400 hover:text-slate-700 p-1">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Overall Completion Progress Bar -->
+            <div class="py-4 border-b border-slate-100 space-y-2">
+                <div class="flex justify-between items-center text-xs font-semibold">
+                    <span class="text-slate-600">Pool Progress: <span id="coverage-completed-count" class="text-purple-700 font-bold">0 / 0</span> combinations</span>
+                    <div class="flex items-center gap-2">
+                        <span id="coverage-laps-badge" class="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 text-xs font-bold flex items-center gap-1">
+                            <i class="fa-solid fa-trophy text-purple-600 text-[10px]"></i> <span id="coverage-laps-count">0</span> Full Passes
+                        </span>
+                        <span id="coverage-percentage-label" class="text-purple-700 font-bold text-sm">0%</span>
+                    </div>
+                </div>
+                <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden border border-slate-200">
+                    <div id="coverage-progress-bar" class="bg-gradient-to-r from-purple-500 to-indigo-600 h-full w-0 transition-all duration-500"></div>
+                </div>
+                <p id="coverage-status-msg" class="text-xs text-slate-500 italic text-center pt-1"></p>
+            </div>
+
+            <!-- Search & Filters for Table -->
+            <div class="py-2 flex items-center gap-2">
+                <div class="relative flex-1">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                    <input 
+                        type="text" 
+                        id="coverage-search-input" 
+                        oninput="renderCoverageUI()" 
+                        placeholder="Filter table..." 
+                        class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-purple-500"
+                    >
+                </div>
+                <button onclick="resetCoverageStats()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+                    Reset Counts
+                </button>
+            </div>
+
+            <!-- Conjugations Table -->
+            <div class="flex-1 overflow-y-auto custom-scrollbar my-2 border border-slate-200 rounded-xl bg-slate-50/50">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead class="bg-white text-slate-500 font-semibold sticky top-0 border-b border-slate-200 shadow-xs">
+                        <tr>
+                            <th class="p-2.5">Pronoun</th>
+                            <th class="p-2.5">Infinitive</th>
+                            <th class="p-2.5">Tense</th>
+                            <th class="p-2.5">Conjugated Form</th>
+                            <th class="p-2.5 text-center">Attempts</th>
+                            <th class="p-2.5 text-right">Accuracy</th>
+                        </tr>
+                    </thead>
+                    <tbody id="coverage-table-body" class="divide-y divide-slate-200 font-medium">
+                        <!-- Dynamically populated rows -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex justify-end">
+                <button onclick="closeCoverageModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm px-5 py-2 rounded-xl transition">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const TENSES = {
+            present: { name: 'Present', label: 'Presente', badgeClass: 'bg-purple-600 text-white' },
+            preterite: { name: 'Preterite', label: 'Pretérito', badgeClass: 'bg-blue-600 text-white' },
+            imperfect: { name: 'Imperfect', label: 'Imperfecto', badgeClass: 'bg-teal-600 text-white' },
+            future: { name: 'Future', label: 'Futuro', badgeClass: 'bg-amber-600 text-white' },
+            conditional: { name: 'Conditional', label: 'Condicional', badgeClass: 'bg-rose-600 text-white' }
+        };
+
+        let selectedTenses = ['present'];
+
+        const VERB_DATABASE = [
+            // --- REGULAR -AR VERBS ---
+            { id: 'hablar', infinitive: 'hablar', ending: '-AR', typeCategory: 'regular', type: 'Regular -AR', isIrregular: false, isStem: false, isTop10: false, english: 'to speak' },
+            { id: 'trabajar', infinitive: 'trabajar', ending: '-AR', typeCategory: 'regular', type: 'Regular -AR', isIrregular: false, isStem: false, isTop10: false, english: 'to work' },
+            { id: 'estudiar', infinitive: 'estudiar', ending: '-AR', typeCategory: 'regular', type: 'Regular -AR', isIrregular: false, isStem: false, isTop10: false, english: 'to study' },
+            { id: 'escuchar', infinitive: 'escuchar', ending: '-AR', typeCategory: 'regular', type: 'Regular -AR', isIrregular: false, isStem: false, isTop10: false, english: 'to listen' },
+            { id: 'cocinar', infinitive: 'cocinar', ending: '-AR', typeCategory: 'regular', type: 'Regular -AR', isIrregular: false, isStem: false, isTop10: false, english: 'to cook' },
+            { id: 'caminar', infinitive: 'caminar', ending: '-AR', typeCategory: 'regular', type: 'Regular -AR', isIrregular: false, isStem: false, isTop10: false, english: 'to walk' },
+            { id: 'bailar', infinitive: 'bailar', ending: '-AR', typeCategory: 'regular', type: 'Regular -AR', isIrregular: false, isStem: false, isTop10: false, english: 'to dance' },
+            { id: 'cantar', infinitive: 'cantar', ending: '-AR', typeCategory: 'regular', type: 'Regular -AR', isIrregular: false, isStem: false, isTop10: false, english: 'to sing' },
+            { id: 'comprar', infinitive: 'comprar', ending: '-AR', typeCategory: 'regular', type: 'Regular -AR', isIrregular: false, isStem: false, isTop10: false, english: 'to buy' },
+            { id: 'viajar', infinitive: 'viajar', ending: '-AR', typeCategory: 'regular', type: 'Regular -AR', isIrregular: false, isStem: false, isTop10: false, english: 'to travel' },
+            { id: 'mirar', infinitive: 'mirar', ending: '-AR', typeCategory: 'regular', type: 'Regular -AR', isIrregular: false, isStem: false, isTop10: false, english: 'to watch/look' },
+            { id: 'llamar', infinitive: 'llamar', ending: '-AR', typeCategory: 'regular', type: 'Regular -AR', isIrregular: false, isStem: false, isTop10: false, english: 'to call' },
+            { id: 'necesitar', infinitive: 'necesitar', ending: '-AR', typeCategory: 'regular', type: 'Regular -AR', isIrregular: false, isStem: false, isTop10: false, english: 'to need' },
+            { id: 'tomar', infinitive: 'tomar', ending: '-AR', typeCategory: 'regular', type: 'Regular -AR', isIrregular: false, isStem: false, isTop10: false, english: 'to take/drink' },
+            { id: 'usar', infinitive: 'usar', ending: '-AR', typeCategory: 'regular', type: 'Regular -AR', isIrregular: false, isStem: false, isTop10: false, english: 'to use' },
+            { id: 'preguntar', infinitive: 'preguntar', ending: '-AR', typeCategory: 'regular', type: 'Regular -AR', isIrregular: false, isStem: false, isTop10: false, english: 'to ask' },
+
+            { id: 'comer', infinitive: 'comer', ending: '-ER', typeCategory: 'regular', type: 'Regular -ER', isIrregular: false, isStem: false, isTop10: false, english: 'to eat' },
+            { id: 'beber', infinitive: 'beber', ending: '-ER', typeCategory: 'regular', type: 'Regular -ER', isIrregular: false, isStem: false, isTop10: false, english: 'to drink' },
+            { id: 'leer', infinitive: 'leer', ending: '-ER', typeCategory: 'regular', type: 'Regular -ER', isIrregular: false, isStem: false, isTop10: false, english: 'to read' },
+            { id: 'correr', infinitive: 'correr', ending: '-ER', typeCategory: 'regular', type: 'Regular -ER', isIrregular: false, isStem: false, isTop10: false, english: 'to run' },
+            { id: 'aprender', infinitive: 'aprender', ending: '-ER', typeCategory: 'regular', type: 'Regular -ER', isIrregular: false, isStem: false, isTop10: false, english: 'to learn' },
+            { id: 'comprender', infinitive: 'comprender', ending: '-ER', typeCategory: 'regular', type: 'Regular -ER', isIrregular: false, isStem: false, isTop10: false, english: 'to understand' },
+            { id: 'vender', infinitive: 'vender', ending: '-ER', typeCategory: 'regular', type: 'Regular -ER', isIrregular: false, isStem: false, isTop10: false, english: 'to sell' },
+            { id: 'responder', infinitive: 'responder', ending: '-ER', typeCategory: 'regular', type: 'Regular -ER', isIrregular: false, isStem: false, isTop10: false, english: 'to answer' },
+
+            { id: 'vivir', infinitive: 'vivir', ending: '-IR', typeCategory: 'regular', type: 'Regular -IR', isIrregular: false, isStem: false, isTop10: false, english: 'to live' },
+            { id: 'escribir', infinitive: 'escribir', ending: '-IR', typeCategory: 'regular', type: 'Regular -IR', isIrregular: false, isStem: false, isTop10: false, english: 'to write' },
+            { id: 'abrir', infinitive: 'abrir', ending: '-IR', typeCategory: 'regular', type: 'Regular -IR', isIrregular: false, isStem: false, isTop10: false, english: 'to open' },
+            { id: 'recibir', infinitive: 'recibir', ending: '-IR', typeCategory: 'regular', type: 'Regular -IR', isIrregular: false, isStem: false, isTop10: false, english: 'to receive' },
+            { id: 'compartir', infinitive: 'compartir', ending: '-IR', typeCategory: 'regular', type: 'Regular -IR', isIrregular: false, isStem: false, isTop10: false, english: 'to share' },
+            { id: 'asistir', infinitive: 'asistir', ending: '-IR', typeCategory: 'regular', type: 'Regular -IR', isIrregular: false, isStem: false, isTop10: false, english: 'to attend' },
+
+            { id: 'querer', infinitive: 'querer', ending: '-ER', typeCategory: 'stem', type: 'Stem-changer (e->ie)', isIrregular: true, isStem: true, isTop10: false, english: 'to want (e->ie)' },
+            { id: 'poder', infinitive: 'poder', ending: '-ER', typeCategory: 'stem', type: 'Stem-changer (o->ue)', isIrregular: true, isStem: true, isTop10: false, english: 'to be able (o->ue)' },
+            { id: 'jugar', infinitive: 'jugar', ending: '-AR', typeCategory: 'stem', type: 'Stem-changer (u->ue)', isIrregular: true, isStem: true, isTop10: false, english: 'to play (u->ue)' },
+            { id: 'dormir', infinitive: 'dormir', ending: '-IR', typeCategory: 'stem', type: 'Stem-changer (o->ue)', isIrregular: true, isStem: true, isTop10: false, english: 'to sleep (o->ue)' },
+            { id: 'pensar', infinitive: 'pensar', ending: '-AR', typeCategory: 'stem', type: 'Stem-changer (e->ie)', isIrregular: true, isStem: true, isTop10: false, english: 'to think (e->ie)' },
+            { id: 'empezar', infinitive: 'empezar', ending: '-AR', typeCategory: 'stem', type: 'Stem-changer (e->ie)', isIrregular: true, isStem: true, isTop10: false, english: 'to begin (e->ie)' },
+            { id: 'volver', infinitive: 'volver', ending: '-ER', typeCategory: 'stem', type: 'Stem-changer (o->ue)', isIrregular: true, isStem: true, isTop10: false, english: 'to return (o->ue)' },
+            { id: 'pedir', infinitive: 'pedir', ending: '-IR', typeCategory: 'stem', type: 'Stem-changer (e->i)', isIrregular: true, isStem: true, isTop10: false, english: 'to ask for (e->i)' },
+            { id: 'servir', infinitive: 'servir', ending: '-IR', typeCategory: 'stem', type: 'Stem-changer (e->i)', isIrregular: true, isStem: true, isTop10: false, english: 'to serve (e->i)' },
+
+            { id: 'ser', infinitive: 'ser', ending: '-ER', typeCategory: 'irregular', type: 'Irregular', isIrregular: true, isStem: false, isTop10: true, english: 'to be (permanent)' },
+            { id: 'estar', infinitive: 'estar', ending: '-AR', typeCategory: 'irregular', type: 'Irregular', isIrregular: true, isStem: false, isTop10: true, english: 'to be (temporary)' },
+            { id: 'ir', infinitive: 'ir', ending: '-IR', typeCategory: 'irregular', type: 'Irregular', isIrregular: true, isStem: false, isTop10: true, english: 'to go' },
+            { id: 'tener', infinitive: 'tener', ending: '-ER', typeCategory: 'irregular', type: 'Irregular', isIrregular: true, isStem: true, isTop10: true, english: 'to have' },
+            { id: 'hacer', infinitive: 'hacer', ending: '-ER', typeCategory: 'irregular', type: 'Irregular', isIrregular: true, isStem: false, isTop10: true, english: 'to do/make' },
+            { id: 'decir', infinitive: 'decir', ending: '-IR', typeCategory: 'irregular', type: 'Irregular', isIrregular: true, isStem: true, isTop10: true, english: 'to say/tell' },
+            { id: 'ver', infinitive: 'ver', ending: '-ER', typeCategory: 'irregular', type: 'Irregular', isIrregular: true, isStem: false, isTop10: true, english: 'to see' },
+            { id: 'venir', infinitive: 'venir', ending: '-IR', typeCategory: 'irregular', type: 'Irregular', isIrregular: true, isStem: true, isTop10: true, english: 'to come' },
+            { id: 'poner', infinitive: 'poner', ending: '-ER', typeCategory: 'irregular', type: 'Irregular', isIrregular: true, isStem: false, isTop10: true, english: 'to put/place' },
+            { id: 'salir', infinitive: 'salir', ending: '-IR', typeCategory: 'irregular', type: 'Irregular', isIrregular: true, isStem: false, isTop10: true, english: 'to go out/leave' },
+            { id: 'saber', infinitive: 'saber', ending: '-ER', typeCategory: 'irregular', type: 'Irregular', isIrregular: true, isStem: false, isTop10: false, english: 'to know (facts)' },
+            { id: 'conocer', infinitive: 'conocer', ending: '-ER', typeCategory: 'irregular', type: 'Irregular', isIrregular: true, isStem: false, isTop10: false, english: 'to know (people)' },
+            { id: 'dar', infinitive: 'dar', ending: '-AR', typeCategory: 'irregular', type: 'Irregular', isIrregular: true, isStem: false, isTop10: false, english: 'to give' }
+        ];
+
+        const IRREGULAR_FORMS = {
+            ser: {
+                present: { yo: 'soy', tu: 'eres', el: 'es', nosotros: 'somos', vosotros: 'sois', ellos: 'son' },
+                preterite: { yo: 'fui', tu: 'fuiste', el: 'fue', nosotros: 'fuimos', vosotros: 'fuisteis', ellos: 'fueron' },
+                imperfect: { yo: 'era', tu: 'eras', el: 'era', nosotros: 'éramos', vosotros: 'erais', ellos: 'eran' }
+            },
+            estar: {
+                present: { yo: 'estoy', tu: 'estás', el: 'está', nosotros: 'estamos', vosotros: 'estáis', ellos: 'están' },
+                preterite: { yo: 'estuve', tu: 'estuviste', el: 'estuvo', nosotros: 'estuvimos', vosotros: 'estuvisteis', ellos: 'estuvieron' }
+            },
+            ir: {
+                present: { yo: 'voy', tu: 'vas', el: 'va', nosotros: 'vamos', vosotros: 'vais', ellos: 'van' },
+                preterite: { yo: 'fui', tu: 'fuiste', el: 'fue', nosotros: 'fuimos', vosotros: 'fuisteis', ellos: 'fueron' },
+                imperfect: { yo: 'iba', tu: 'ibas', el: 'iba', nosotros: 'íbamos', vosotros: 'ibais', ellos: 'iban' }
+            },
+            tener: {
+                present: { yo: 'tengo', tu: 'tienes', el: 'tiene', nosotros: 'tenemos', vosotros: 'tenéis', ellos: 'tienen' },
+                preterite: { yo: 'tuve', tu: 'tuviste', el: 'tuvo', nosotros: 'tuvimos', vosotros: 'tuvisteis', ellos: 'tuvieron' },
+                futStem: 'tendr'
+            },
+            hacer: {
+                present: { yo: 'hago', tu: 'haces', el: 'hace', nosotros: 'hacemos', vosotros: 'hacéis', ellos: 'hacen' },
+                preterite: { yo: 'hice', tu: 'hiciste', el: 'hizo', nosotros: 'hicimos', vosotros: 'hicisteis', ellos: 'hicieron' },
+                futStem: 'har'
+            },
+            decir: {
+                present: { yo: 'digo', tu: 'dices', el: 'dice', nosotros: 'decimos', vosotros: 'decís', ellos: 'dicen' },
+                preterite: { yo: 'dije', tu: 'dijiste', el: 'dijo', nosotros: 'dijimos', vosotros: 'dijisteis', ellos: 'dijeron' },
+                futStem: 'dir'
+            },
+            ver: {
+                present: { yo: 'veo', tu: 'ves', el: 've', nosotros: 'vemos', vosotros: 'veis', ellos: 'ven' },
+                preterite: { yo: 'vi', tu: 'viste', el: 'vio', nosotros: 'vimos', vosotros: 'visteis', ellos: 'vieron' },
+                imperfect: { yo: 'veía', tu: 'veías', el: 'veía', nosotros: 'veíamos', vosotros: 'veíais', ellos: 'veían' }
+            },
+            venir: {
+                present: { yo: 'vengo', tu: 'vienes', el: 'viene', nosotros: 'venimos', vosotros: 'venís', ellos: 'vienen' },
+                preterite: { yo: 'vine', tu: 'viniste', el: 'vino', nosotros: 'vinimos', vosotros: 'vinisteis', ellos: 'vinieron' },
+                futStem: 'vendr'
+            },
+            poner: {
+                present: { yo: 'pongo', tu: 'pones', el: 'pone', nosotros: 'ponemos', vosotros: 'ponéis', ellos: 'ponen' },
+                preterite: { yo: 'puse', tu: 'pusiste', el: 'puso', nosotros: 'pusimos', vosotros: 'pusisteis', ellos: 'pusieron' },
+                futStem: 'pondr'
+            },
+            salir: {
+                present: { yo: 'salgo', tu: 'sales', el: 'sale', nosotros: 'salimos', vosotros: 'salís', ellos: 'salen' },
+                futStem: 'saldr'
+            },
+            saber: {
+                present: { yo: 'sé', tu: 'sabes', el: 'sabe', nosotros: 'sabemos', vosotros: 'sabéis', ellos: 'saben' },
+                preterite: { yo: 'supe', tu: 'supiste', el: 'supo', nosotros: 'supimos', vosotros: 'supisteis', ellos: 'supieron' },
+                futStem: 'sabr'
+            },
+            conocer: {
+                present: { yo: 'conozco', tu: 'conoces', el: 'conoce', nosotros: 'conocemos', vosotros: 'conocéis', ellos: 'conocen' }
+            },
+            dar: {
+                present: { yo: 'doy', tu: 'das', el: 'da', nosotros: 'damos', vosotros: 'dais', ellos: 'dan' },
+                preterite: { yo: 'di', tu: 'diste', el: 'dio', nosotros: 'dimos', vosotros: 'disteis', ellos: 'dieron' }
+            },
+            querer: {
+                present: { yo: 'quiero', tu: 'quieres', el: 'quiere', nosotros: 'queremos', vosotros: 'queréis', ellos: 'quieren' },
+                preterite: { yo: 'quise', tu: 'quisiste', el: 'quiso', nosotros: 'quisimos', vosotros: 'quisisteis', ellos: 'quisieron' },
+                futStem: 'querr'
+            },
+            poder: {
+                present: { yo: 'puedo', tu: 'puedes', el: 'puede', nosotros: 'podemos', vosotros: 'podéis', ellos: 'pueden' },
+                preterite: { yo: 'pude', tu: 'pudiste', el: 'pudo', nosotros: 'pudimos', vosotros: 'pudisteis', ellos: 'pudieron' },
+                futStem: 'podr'
+            },
+            jugar: { present: { yo: 'juego', tu: 'juegas', el: 'juega', nosotros: 'jugamos', vosotros: 'jugáis', ellos: 'juegan' } },
+            dormir: { present: { yo: 'duermo', tu: 'duermes', el: 'duerme', nosotros: 'dormimos', vosotros: 'dormís', ellos: 'duermen' } },
+            pensar: { present: { yo: 'pienso', tu: 'piensas', el: 'piensa', nosotros: 'pensamos', vosotros: 'pensáis', ellos: 'piensan' } },
+            empezar: { present: { yo: 'empiezo', tu: 'empiezas', el: 'empieza', nosotros: 'empezamos', vosotros: 'empezáis', ellos: 'empiezan' } },
+            volver: { present: { yo: 'vuelvo', tu: 'vuelves', el: 'vuelve', nosotros: 'volvemos', vosotros: 'volvéis', ellos: 'vuelven' } },
+            pedir: { present: { yo: 'pido', tu: 'pides', el: 'pide', nosotros: 'pedimos', vosotros: 'pedís', ellos: 'piden' } },
+            servir: { present: { yo: 'sirvo', tu: 'sirves', el: 'sirve', nosotros: 'servimos', vosotros: 'servís', ellos: 'sirven' } }
+        };
+
+        function getConjugation(verb, tense, pronounKey) {
+            const id = verb.id;
+            const inf = verb.infinitive;
+            const stem = inf.slice(0, -2);
+            const ending = verb.ending;
+
+            // Check explicit irregular overrides
+            if (IRREGULAR_FORMS[id] && IRREGULAR_FORMS[id][tense] && IRREGULAR_FORMS[id][tense][pronounKey]) {
+                return IRREGULAR_FORMS[id][tense][pronounKey];
+            }
+
+            // 1. PRESENT TENSE
+            if (tense === 'present') {
+                const endingsMap = {
+                    '-AR': { yo: 'o', tu: 'as', el: 'a', nosotros: 'amos', vosotros: 'áis', ellos: 'an' },
+                    '-ER': { yo: 'o', tu: 'es', el: 'e', nosotros: 'emos', vosotros: 'éis', ellos: 'en' },
+                    '-IR': { yo: 'o', tu: 'es', el: 'e', nosotros: 'imos', vosotros: 'ís', ellos: 'en' }
+                };
+                return stem + endingsMap[ending][pronounKey];
+            }
+
+            // 2. PRETERITE TENSE
+            if (tense === 'preterite') {
+                const endingsMap = {
+                    '-AR': { yo: 'é', tu: 'aste', el: 'ó', nosotros: 'amos', vosotros: 'asteis', ellos: 'aron' },
+                    '-ER': { yo: 'í', tu: 'iste', el: 'ió', nosotros: 'imos', vosotros: 'isteis', ellos: 'ieron' },
+                    '-IR': { yo: 'í', tu: 'iste', el: 'ió', nosotros: 'imos', vosotros: 'isteis', ellos: 'ieron' }
+                };
+                return stem + endingsMap[ending][pronounKey];
+            }
+
+            // 3. IMPERFECT TENSE
+            if (tense === 'imperfect') {
+                const endingsMap = {
+                    '-AR': { yo: 'aba', tu: 'abas', el: 'aba', nosotros: 'áramos', vosotros: 'abais', ellos: 'aban' },
+                    '-ER': { yo: 'ía', tu: 'ías', el: 'ía', nosotros: 'íamos', vosotros: 'íais', ellos: 'ían' },
+                    '-IR': { yo: 'ía', tu: 'ías', el: 'ía', nosotros: 'íamos', vosotros: 'íais', ellos: 'ían' }
+                };
+                if (ending === '-AR' && pronounKey === 'nosotros') return stem + 'ábamos';
+                return stem + endingsMap[ending][pronounKey];
+            }
+
+            // 4. FUTURE TENSE
+            if (tense === 'future') {
+                const futStem = (IRREGULAR_FORMS[id] && IRREGULAR_FORMS[id].futStem) ? IRREGULAR_FORMS[id].futStem : inf;
+                const futEndings = { yo: 'é', tu: 'ás', el: 'á', nosotros: 'emos', vosotros: 'éis', ellos: 'án' };
+                return futStem + futEndings[pronounKey];
+            }
+
+            // 5. CONDITIONAL TENSE
+            if (tense === 'conditional') {
+                const condStem = (IRREGULAR_FORMS[id] && IRREGULAR_FORMS[id].futStem) ? IRREGULAR_FORMS[id].futStem : inf;
+                const condEndings = { yo: 'ía', tu: 'ías', el: 'ía', nosotros: 'íamos', vosotros: 'íais', ellos: 'ían' };
+                return condStem + condEndings[pronounKey];
+            }
+
+            return inf;
+        }
+
+        const PRONOUN_MAP = {
+            yo: { label: 'YO', display: 'yo' },
+            tu: { label: 'TÚ', display: 'tú' },
+            el: { label: 'ÉL / ELLA / UD.', display: 'él/ella/usted' },
+            nosotros: { label: 'NOSOTROS', display: 'nosotros' },
+            vosotros: { label: 'VOSOTROS', display: 'vosotros' },
+            ellos: { label: 'ELLOS / ELLAS / UDS.', display: 'ellos/ellas/ustedes' }
+        };
+
+        let selectedVerbIds = VERB_DATABASE.map(v => v.id);
+        let conjugationStats = {};
+        let currentCard = null;
+        let streak = 0;
+        let bestStreak = 0;
+        let currentMode = 'spam';
+        let speedrunTimer = null;
+        let speedrunTimeLeft = 60;
+        let isWaitingForNext = false;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playBeep(isSuccess) {
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (isSuccess) {
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.08); // E5
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.25);
+                } else {
+                    osc.frequency.setValueAtTime(220, audioCtx.currentTime); // A3
+                    osc.frequency.setValueAtTime(180, audioCtx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+                }
+            } catch (e) {
+                // Audio fallback silence
+            }
+        }
+
+        function speakCurrentVerb() {
+            if (!currentCard || !('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            // Pronounce ONLY the target conjugated verb (pronoun omitted)
+            const utterance = new SpeechSynthesisUtterance(currentCard.targetAnswer);
+            utterance.lang = 'es-ES';
+            utterance.rate = 0.9;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function getActiveVerbs() {
+            const filtered = VERB_DATABASE.filter(v => selectedVerbIds.includes(v.id));
+            return filtered.length > 0 ? filtered : VERB_DATABASE;
+        }
+
+        function nextCard() {
+            isWaitingForNext = false;
+            const combos = getAllPossibleCombinations();
+            if (combos.length === 0) return;
+
+            // Find minimum attempts
+            const minAttempts = Math.min(...combos.map(c => c.attempts));
+            let candidateCombos = combos.filter(c => c.attempts === minAttempts);
+
+            if (candidateCombos.length > 1 && currentCard) {
+                const filtered = candidateCombos.filter(c => !(c.verb.id === currentCard.verb.id && c.pronounKey === currentCard.pronounKey && c.tenseKey === currentCard.tenseKey));
+                if (filtered.length > 0) candidateCombos = filtered;
+            }
+
+            const chosen = candidateCombos[Math.floor(Math.random() * candidateCombos.length)];
+            const targetAnswer = chosen.targetAnswer;
+
+            currentCard = {
+                verb: chosen.verb,
+                tenseKey: chosen.tenseKey,
+                pronounKey: chosen.pronounKey,
+                targetAnswer: targetAnswer
+            };
+
+            const tenseObj = TENSES[chosen.tenseKey] || TENSES.present;
+            const tenseTag = document.getElementById('card-tense-tag');
+            tenseTag.textContent = tenseObj.name.toUpperCase();
+            tenseTag.className = `text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-xs ${tenseObj.badgeClass}`;
+
+            document.getElementById('card-verb-type').textContent = chosen.verb.type;
+            document.getElementById('card-pronoun').textContent = PRONOUN_MAP[chosen.pronounKey].label;
+            document.getElementById('card-verb-infinitive').textContent = chosen.verb.infinitive;
+            document.getElementById('card-verb-english').textContent = `(${chosen.verb.english})`;
+
+            const input = document.getElementById('answer-input');
+            input.value = '';
+            input.classList.remove('border-emerald-500', 'border-rose-500', 'shake');
+            input.disabled = false;
+            if (currentMode !== 'cards') input.focus();
+
+            const banner = document.getElementById('feedback-banner');
+            banner.classList.add('hidden');
+            banner.textContent = '';
+
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.innerHTML = `<span>Check Answer</span> <i class="fa-solid fa-arrow-right"></i>`;
+            submitBtn.className = "w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold py-3.5 px-6 rounded-2xl shadow-lg shadow-purple-600/25 transition transform active:scale-95 text-lg flex items-center justify-center gap-2";
+
+            if (currentMode === 'cards') {
+                document.getElementById('flashcard-answer-display').classList.add('hidden');
+                document.getElementById('flashcard-answer-text').textContent = targetAnswer;
+                document.getElementById('flashcard-reveal-btn').classList.remove('hidden');
+                document.getElementById('flashcard-rating-btns').classList.add('hidden');
+            }
+        }
+
+        function normalizeText(text) {
+            return text.trim().toLowerCase()
+                .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                .replace(/\s+/g, '');
+        }
+
+        function handleFormSubmit(e) {
+            if (e) e.preventDefault();
+            if (!currentCard) return;
+
+            const input = document.getElementById('answer-input');
+            const submitBtn = document.getElementById('submit-btn');
+            const banner = document.getElementById('feedback-banner');
+
+            if (isWaitingForNext) {
+                nextCard();
+                return;
+            }
+
+            const userInput = input.value.trim().toLowerCase();
+            if (!userInput) return;
+
+            const key = `${currentCard.verb.id}:${currentCard.tenseKey}:${currentCard.pronounKey}`;
+            if (!conjugationStats[key]) {
+                conjugationStats[key] = { attempts: 0, correct: 0 };
+            }
+            conjugationStats[key].attempts += 1;
+
+            const exactTarget = currentCard.targetAnswer.toLowerCase();
+            const isExact = (userInput === exactTarget);
+            const isClose = !isExact && (normalizeText(userInput) === normalizeText(exactTarget));
+
+            if (isExact || isClose) {
+                conjugationStats[key].correct += 1;
+                streak += 1;
+                if (streak > bestStreak) bestStreak = streak;
+                playBeep(true);
+
+                input.classList.add('border-emerald-500');
+                banner.className = "w-full mt-4 p-3 rounded-xl font-bold text-center text-sm bg-emerald-50 text-emerald-800 border border-emerald-200 pop-in block";
+                banner.textContent = isClose ? `¡Excelente! (Watch accents: ${currentCard.targetAnswer})` : `¡Correcto! +1 Streak`;
+                
+                updateHeaderStats();
+                speakCurrentVerb();
+
+                isWaitingForNext = true;
+                submitBtn.innerHTML = `<span>Next Question</span> <i class="fa-solid fa-forward"></i>`;
+                submitBtn.className = "w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3.5 px-6 rounded-2xl shadow-lg transition text-lg flex items-center justify-center gap-2";
+
+                setTimeout(() => {
+                    if (isWaitingForNext) nextCard();
+                }, 700);
+
+            } else {
+                streak = 0;
+                playBeep(false);
+
+                input.classList.add('border-rose-500', 'shake');
+                banner.className = "w-full mt-4 p-3 rounded-xl font-bold text-center text-sm bg-rose-50 text-rose-800 border border-rose-200 pop-in block";
+                banner.innerHTML = `Incorrect. Correct answer is: <span class="underline font-black text-base">${currentCard.targetAnswer}</span>`;
+
+                updateHeaderStats();
+                isWaitingForNext = true;
+                submitBtn.innerHTML = `<span>Try Next</span> <i class="fa-solid fa-forward"></i>`;
+                submitBtn.className = "w-full bg-slate-700 hover:bg-slate-800 text-white font-extrabold py-3.5 px-6 rounded-2xl shadow-lg transition text-lg flex items-center justify-center gap-2";
+            }
+
+            updateCoverageHeaderBadge();
+        }
+
+        function updateHeaderStats() {
+            document.getElementById('header-streak').textContent = streak;
+            document.getElementById('header-best-streak').textContent = bestStreak;
+        }
+
+        function getAllPossibleCombinations() {
+            const verbs = getActiveVerbs();
+            const pronouns = Object.keys(PRONOUN_MAP);
+            const activeTenses = selectedTenses.length > 0 ? selectedTenses : ['present'];
+            const combinations = [];
+
+            verbs.forEach(v => {
+                activeTenses.forEach(tenseKey => {
+                    pronouns.forEach(pKey => {
+                        const key = `${v.id}:${tenseKey}:${pKey}`;
+                        const stats = conjugationStats[key] || { attempts: 0, correct: 0 };
+                        const targetForm = getConjugation(v, tenseKey, pKey);
+                        combinations.push({
+                            verb: v,
+                            tenseKey: tenseKey,
+                            pronounKey: pKey,
+                            targetAnswer: targetForm,
+                            attempts: stats.attempts,
+                            correct: stats.correct
+                        });
+                    });
+                });
+            });
+
+            return combinations;
+        }
+
+        function getFullCompletionsCount() {
+            const combos = getAllPossibleCombinations();
+            if (combos.length === 0) return 0;
+            return Math.min(...combos.map(c => c.attempts));
+        }
+
+        function updateCoverageHeaderBadge() {
+            const combos = getAllPossibleCombinations();
+            if (combos.length === 0) return;
+
+            const doneCount = combos.filter(c => c.attempts > 0).length;
+            const pct = Math.round((doneCount / combos.length) * 100);
+            
+            document.getElementById('header-coverage-pct').textContent = `${pct}%`;
+
+            const fullPasses = getFullCompletionsCount();
+            const badge = document.getElementById('header-completions-badge');
+            if (fullPasses > 0) {
+                badge.textContent = `${fullPasses}x full`;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+
+            const headerTenseBtn = document.getElementById('header-tense-badge');
+            if (selectedTenses.length === 1) {
+                headerTenseBtn.querySelector('span').textContent = `${TENSES[selectedTenses[0]].name} Tense`;
+            } else {
+                headerTenseBtn.querySelector('span').textContent = `${selectedTenses.length} Tenses Active`;
+            }
+        }
+
+        function insertAccent(char) {
+            const input = document.getElementById('answer-input');
+            const start = input.selectionStart;
+            const end = input.selectionEnd;
+            const text = input.value;
+            input.value = text.substring(0, start) + char + text.substring(end);
+            input.focus();
+            input.setSelectionRange(start + 1, start + 1);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && document.activeElement.tagName !== 'INPUT') {
+                e.preventDefault();
+                if (currentMode === 'cards') {
+                    const revealBtn = document.getElementById('flashcard-reveal-btn');
+                    if (!revealBtn.classList.contains('hidden')) {
+                        revealFlashcardAnswer();
+                    }
+                } else if (isWaitingForNext) {
+                    nextCard();
+                }
+            }
+        });
+
+        function switchMode(mode) {
+            currentMode = mode;
+
+            ['spam', 'speedrun', 'cards'].forEach(m => {
+                const btn = document.getElementById(`mode-btn-${m}`);
+                if (m === mode) {
+                    btn.className = "flex-1 py-2 rounded-xl transition text-center bg-purple-600 text-white shadow-md";
+                } else {
+                    btn.className = "flex-1 py-2 rounded-xl transition text-center text-slate-600 hover:text-purple-600 hover:bg-purple-50";
+                }
+            });
+
+            const timerBanner = document.getElementById('speedrun-banner');
+            if (mode === 'speedrun') {
+                timerBanner.classList.remove('hidden');
+                startSpeedrunTimer();
+            } else {
+                timerBanner.classList.add('hidden');
+                clearInterval(speedrunTimer);
+            }
+
+            const form = document.getElementById('conjugation-form');
+            const flashControls = document.getElementById('flashcard-controls');
+            if (mode === 'cards') {
+                form.classList.add('hidden');
+                flashControls.classList.remove('hidden');
+            } else {
+                form.classList.remove('hidden');
+                flashControls.classList.add('hidden');
+            }
+
+            nextCard();
+        }
+
+        function startSpeedrunTimer() {
+            clearInterval(speedrunTimer);
+            speedrunTimeLeft = 60;
+            document.getElementById('speedrun-timer').textContent = '60s';
+
+            speedrunTimer = setInterval(() => {
+                speedrunTimeLeft -= 1;
+                document.getElementById('speedrun-timer').textContent = `${speedrunTimeLeft}s`;
+
+                if (speedrunTimeLeft <= 0) {
+                    clearInterval(speedrunTimer);
+                    alert(`⏰ Speedrun Time's Up!\n\nYour streak reached: ${streak}\nBest Streak: ${bestStreak}`);
+                    switchMode('spam');
+                }
+            }, 1000);
+        }
+
+        function revealFlashcardAnswer() {
+            document.getElementById('flashcard-answer-display').classList.remove('hidden');
+            document.getElementById('flashcard-reveal-btn').classList.add('hidden');
+            document.getElementById('flashcard-rating-btns').classList.remove('hidden');
+            speakCurrentVerb();
+        }
+
+        function nextFlashcard(wasCorrect) {
+            const key = `${currentCard.verb.id}:${currentCard.tenseKey}:${currentCard.pronounKey}`;
+            if (!conjugationStats[key]) conjugationStats[key] = { attempts: 0, correct: 0 };
+            conjugationStats[key].attempts += 1;
+
+            if (wasCorrect) {
+                conjugationStats[key].correct += 1;
+                streak += 1;
+                if (streak > bestStreak) bestStreak = streak;
+                playBeep(true);
+            } else {
+                streak = 0;
+                playBeep(false);
+            }
+
+            updateHeaderStats();
+            updateCoverageHeaderBadge();
+            nextCard();
+        }
+
+        function openSettingsModal() {
+            renderTenseCheckboxes();
+            renderVerbGrid();
+            document.getElementById('modal-settings').classList.remove('hidden');
+        }
+
+        function closeSettingsModal() {
+            if (selectedTenses.length === 0) {
+                alert("Please select at least one tense! Defaulting to Present tense.");
+                selectedTenses = ['present'];
+            }
+            if (selectedVerbIds.length === 0) {
+                alert("Please select at least one verb to practice! Resetting selection to Top 10 Essential verbs.");
+                selectedVerbIds = VERB_DATABASE.filter(v => v.isTop10).map(v => v.id);
+            }
+            document.getElementById('modal-settings').classList.add('hidden');
+            updateCoverageHeaderBadge();
+            nextCard();
+        }
+
+        function renderTenseCheckboxes() {
+            const container = document.getElementById('tense-checkboxes-container');
+            container.innerHTML = '';
+
+            Object.keys(TENSES).forEach(tKey => {
+                const tense = TENSES[tKey];
+                const isChecked = selectedTenses.includes(tKey);
+
+                const item = document.createElement('label');
+                item.className = `flex items-center gap-2 p-2 rounded-xl border cursor-pointer select-none transition ${isChecked ? 'bg-purple-100/90 border-purple-400 font-bold text-purple-900 shadow-xs' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`;
+                item.innerHTML = `
+                    <input type="checkbox" value="${tKey}" ${isChecked ? 'checked' : ''} onchange="toggleTenseSelection('${tKey}')" class="w-4 h-4 rounded text-purple-600 focus:ring-purple-500">
+                    <div class="leading-tight">
+                        <div class="text-xs font-black">${tense.name}</div>
+                        <div class="text-[10px] opacity-75">${tense.label}</div>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function toggleTenseSelection(tKey) {
+            if (selectedTenses.includes(tKey)) {
+                if (selectedTenses.length > 1) {
+                    selectedTenses = selectedTenses.filter(t => t !== tKey);
+                }
+            } else {
+                selectedTenses.push(tKey);
+            }
+            renderTenseCheckboxes();
+            updateSelectedCountUI();
+        }
+
+        function applyTensePreset(preset) {
+            if (preset === 'all') {
+                selectedTenses = Object.keys(TENSES);
+            } else if (preset === 'present') {
+                selectedTenses = ['present'];
+            } else if (preset === 'past') {
+                selectedTenses = ['preterite', 'imperfect'];
+            }
+            renderTenseCheckboxes();
+            updateSelectedCountUI();
+        }
+
+        function renderVerbGrid() {
+            const grid = document.getElementById('verbs-checkbox-grid');
+            grid.innerHTML = '';
+
+            const endingFilter = document.getElementById('filter-ending-select').value;
+            const typeFilter = document.getElementById('filter-type-select').value;
+            const sortOrder = document.getElementById('filter-sort-select').value;
+            const searchQuery = document.getElementById('verb-search-input').value.toLowerCase().trim();
+
+            let list = [...VERB_DATABASE];
+
+            if (endingFilter !== 'all') {
+                list = list.filter(v => v.ending === endingFilter);
+            }
+
+            if (typeFilter === 'regular') {
+                list = list.filter(v => !v.isIrregular);
+            } else if (typeFilter === 'irregular') {
+                list = list.filter(v => v.isIrregular && !v.isStem);
+            } else if (typeFilter === 'stem') {
+                list = list.filter(v => v.isStem);
+            }
+
+            if (searchQuery) {
+                list = list.filter(v => 
+                    v.infinitive.toLowerCase().includes(searchQuery) || 
+                    v.english.toLowerCase().includes(searchQuery) ||
+                    v.type.toLowerCase().includes(searchQuery)
+                );
+            }
+
+            if (sortOrder === 'alpha') {
+                list.sort((a, b) => a.infinitive.localeCompare(b.infinitive));
+            } else if (sortOrder === 'ending') {
+                list.sort((a, b) => a.ending.localeCompare(b.ending) || a.infinitive.localeCompare(b.infinitive));
+            } else if (sortOrder === 'type') {
+                list.sort((a, b) => a.type.localeCompare(b.type) || a.infinitive.localeCompare(b.infinitive));
+            }
+
+            if (list.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-8 text-center text-slate-400 font-medium italic">No verbs found matching current filters.</div>`;
+                updateSelectedCountUI();
+                return;
+            }
+
+            list.forEach(verb => {
+                const isChecked = selectedVerbIds.includes(verb.id);
+                
+                let endingBadgeClass = 'bg-slate-100 text-slate-600 border-slate-200';
+                if (verb.ending === '-AR') endingBadgeClass = 'bg-blue-100 text-blue-700 border-blue-200';
+                else if (verb.ending === '-ER') endingBadgeClass = 'bg-emerald-100 text-emerald-700 border-emerald-200';
+                else if (verb.ending === '-IR') endingBadgeClass = 'bg-amber-100 text-amber-700 border-amber-200';
+
+                let typeBadgeClass = '';
+                if (verb.isStem) typeBadgeClass = 'bg-pink-100 text-pink-700 border-pink-200';
+                else if (verb.isIrregular) typeBadgeClass = 'bg-purple-100 text-purple-700 border-purple-200';
+
+                const item = document.createElement('label');
+                item.className = `flex items-center gap-2.5 p-2.5 rounded-2xl border transition cursor-pointer select-none ${isChecked ? 'bg-purple-50/80 border-purple-300 shadow-xs ring-1 ring-purple-300' : 'bg-white border-slate-200 hover:border-purple-200'}`;
+                item.innerHTML = `
+                    <input type="checkbox" value="${verb.id}" ${isChecked ? 'checked' : ''} onchange="toggleVerbSelection('${verb.id}')" class="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 bg-slate-100 border-slate-300">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between gap-1">
+                            <span class="font-bold text-slate-800 text-sm truncate">${verb.infinitive}</span>
+                            <div class="flex items-center gap-1">
+                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded border ${endingBadgeClass}">${verb.ending}</span>
+                                ${verb.isIrregular || verb.isStem ? `<span class="text-[9px] font-bold px-1 py-0.5 rounded border ${typeBadgeClass}">${verb.isStem ? 'stem' : 'irreg'}</span>` : ''}
+                            </div>
+                        </div>
+                        <p class="text-[11px] text-slate-500 truncate">${verb.english}</p>
+                    </div>
+                `;
+                grid.appendChild(item);
+            });
+
+            updateSelectedCountUI();
+        }
+
+        function toggleVerbSelection(id) {
+            if (selectedVerbIds.includes(id)) {
+                selectedVerbIds = selectedVerbIds.filter(v => v !== id);
+            } else {
+                selectedVerbIds.push(id);
+            }
+            renderVerbGrid();
+        }
+
+        function updateSelectedCountUI() {
+            const verbCount = selectedVerbIds.length;
+            const tenseCount = selectedTenses.length;
+            const totalCombos = verbCount * tenseCount * 6;
+            document.getElementById('selected-verbs-count').textContent = `${verbCount} verbs × ${tenseCount} tenses (${totalCombos} unique combinations)`;
+        }
+
+        function applyPreset(preset) {
+            if (preset === 'all') {
+                selectedVerbIds = VERB_DATABASE.map(v => v.id);
+            } else if (preset === 'none') {
+                selectedVerbIds = [];
+            } else if (preset === 'top10') {
+                selectedVerbIds = VERB_DATABASE.filter(v => v.isTop10).map(v => v.id);
+            } else if (preset === 'ar') {
+                selectedVerbIds = VERB_DATABASE.filter(v => v.ending === '-AR').map(v => v.id);
+            } else if (preset === 'er') {
+                selectedVerbIds = VERB_DATABASE.filter(v => v.ending === '-ER').map(v => v.id);
+            } else if (preset === 'ir') {
+                selectedVerbIds = VERB_DATABASE.filter(v => v.ending === '-IR').map(v => v.id);
+            } else if (preset === 'regulars') {
+                selectedVerbIds = VERB_DATABASE.filter(v => !v.isIrregular).map(v => v.id);
+            } else if (preset === 'stem') {
+                selectedVerbIds = VERB_DATABASE.filter(v => v.isStem).map(v => v.id);
+            }
+            renderVerbGrid();
+        }
+
+        function openCoverageModal() {
+            renderCoverageUI();
+            document.getElementById('modal-coverage').classList.remove('hidden');
+        }
+
+        function closeCoverageModal() {
+            document.getElementById('modal-coverage').classList.add('hidden');
+        }
+
+        function renderCoverageUI() {
+            const combos = getAllPossibleCombinations();
+            const totalCount = combos.length;
+            const doneCombos = combos.filter(c => c.attempts > 0);
+            const doneCount = doneCombos.length;
+            const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+            const fullPasses = getFullCompletionsCount();
+
+            document.getElementById('coverage-completed-count').textContent = `${doneCount} / ${totalCount}`;
+            document.getElementById('coverage-percentage-label').textContent = `${pct}%`;
+            document.getElementById('coverage-progress-bar').style.width = `${pct}%`;
+            document.getElementById('coverage-laps-count').textContent = fullPasses;
+
+            const statusMsg = document.getElementById('coverage-status-msg');
+            if (doneCount === totalCount && totalCount > 0) {
+                statusMsg.innerHTML = `<span class="text-purple-700 font-bold">🎉 100% COMPLETE! You've practiced every active conjugation at least ${fullPasses} time(s)!</span>`;
+            } else {
+                statusMsg.textContent = `${totalCount - doneCount} unique combinations remaining in your active pool.`;
+            }
+
+            const tbody = document.getElementById('coverage-table-body');
+            tbody.innerHTML = '';
+
+            const searchQuery = document.getElementById('coverage-search-input').value.toLowerCase().trim();
+
+            combos.forEach(item => {
+                const pDisplay = PRONOUN_MAP[item.pronounKey].display;
+                const tenseName = TENSES[item.tenseKey] ? TENSES[item.tenseKey].name : item.tenseKey;
+                const matchSearch = `${pDisplay} ${item.verb.infinitive} ${tenseName} ${item.targetAnswer}`.toLowerCase().includes(searchQuery);
+
+                if (!matchSearch) return;
+
+                const accuracy = item.attempts > 0 ? Math.round((item.correct / item.attempts) * 100) : 0;
+                const row = document.createElement('tr');
+                row.className = item.attempts > 0 ? "hover:bg-purple-50/50" : "opacity-60 hover:bg-slate-100/50";
+
+                row.innerHTML = `
+                    <td class="p-2.5 font-bold text-purple-700">${PRONOUN_MAP[item.pronounKey].label}</td>
+                    <td class="p-2.5 text-slate-800 font-semibold">${item.verb.infinitive}</td>
+                    <td class="p-2.5 font-extrabold uppercase text-[10px] text-slate-600">${tenseName}</td>
+                    <td class="p-2.5 font-bold text-purple-900">${item.targetAnswer}</td>
+                    <td class="p-2.5 text-center font-mono font-bold">${item.attempts}</td>
+                    <td class="p-2.5 text-right font-mono font-bold ${accuracy >= 80 ? 'text-emerald-600' : (item.attempts === 0 ? 'text-slate-400' : 'text-amber-600')}">${item.attempts > 0 ? accuracy + '%' : '-'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function resetCoverageStats() {
+            if (window.confirm("Reset all practice counts and attempt stats?")) {
+                conjugationStats = {};
+                streak = 0;
+                bestStreak = 0;
+                updateHeaderStats();
+                updateCoverageHeaderBadge();
+                renderCoverageUI();
+            }
+        }
+
+        window.onload = function() {
+            updateHeaderStats();
+            updateCoverageHeaderBadge();
+            nextCard();
+        };
+    </script>
+</body>
+</html>
